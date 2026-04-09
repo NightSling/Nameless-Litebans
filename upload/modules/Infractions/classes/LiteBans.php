@@ -46,17 +46,17 @@ class LiteBans extends Infractions {
                     'uuid' => $punishment->uuid === '#offline#' ?
                         'Unknown' : str_replace('-', '', $punishment->uuid),
                     'reason' => $punishment->reason,
-                    'banned_by_uuid' => str_replace('-', '', $punishment->banned_by_uuid),
-                    'banned_by_name' => $punishment->banned_by_name,
+                    'banned_by_uuid' => str_replace('-', '', $punishment->banned_by_uuid ?? ''),
+                    'banned_by_name' => $punishment->banned_by_name ?? '',
                     'removed_by_uuid' => str_replace('-', '', $punishment->removed_by_uuid ?? ''),
-                    'removed_by_name' => $punishment->removed_by_name,
+                    'removed_by_name' => $punishment->removed_by_name ?? '',
                     'removed_by_date' => $punishment->removed_by_date ?
                         strtotime($punishment->removed_by_date) : null,
                     'time' => $punishment->time / 1000,
-                    'until' => $punishment->until > 0 ? ($punishment->until / 1000) : null,
-                    'ipban' => $punishment->ipban ?: false,
-                    'active' => $punishment->active,
-                    'type' => $punishment->ipban ? 'ipban' : $punishment->type,
+                    'until' => ($punishment->until !== null && $punishment->until !== '' && $punishment->until > 0) ? ($punishment->until / 1000) : null,
+                    'ipban' => !empty($punishment->ipban) && $punishment->ipban !== '',
+                    'active' => isset($punishment->active) && $punishment->active != 0 && $punishment->active !== '',
+                    'type' => (!empty($punishment->ipban) && $punishment->ipban !== '') ? 'ipban' : $punishment->type,
                 ], $infractions));
             }
 
@@ -153,7 +153,7 @@ class LiteBans extends Infractions {
 
     public function getUsername($uuid){
         $qi = fn($id) => $this->_db->quoteIdentifier($id);
-        $user = $this->_db->query('SELECT ' . $qi('name') . ' FROM ' . $this->_extra['history_table'] . ' WHERE ' . $qi('uuid') . ' = ?', array($uuid));
+        $user = $this->_db->query('SELECT ' . $qi('name') . ' FROM ' . $qi($this->_extra['history_table']) . ' WHERE ' . $qi('uuid') . ' = ?', array($uuid));
 
         if($user->count()) return $user->first()->name;
         else return false;
@@ -167,42 +167,44 @@ class LiteBans extends Infractions {
         $qi = fn($id) => $this->_db->quoteIdentifier($id);
 
         return $this->_db->query(
-            <<<SQL
-                SELECT (
-                    (SELECT COUNT(*) FROM {$this->_extra['bans_table']}) +
-                    (SELECT COUNT(*) FROM {$this->_extra['kicks_table']}) +
-                    (SELECT COUNT(*) FROM {$this->_extra['mutes_table']}) +
-                    (SELECT COUNT(*) FROM {$this->_extra['warnings_table']})
-                ) AS total
-            SQL
+            'SELECT (' .
+            '(SELECT COUNT(*) FROM ' . $qi($this->_extra['bans_table']) . ') + ' .
+            '(SELECT COUNT(*) FROM ' . $qi($this->_extra['kicks_table']) . ') + ' .
+            '(SELECT COUNT(*) FROM ' . $qi($this->_extra['mutes_table']) . ') + ' .
+            '(SELECT COUNT(*) FROM ' . $qi($this->_extra['warnings_table']) . ')' .
+            ') AS total'
         )->first()->total;
     }
 
     private function getBansQuery(){
+        $qi = fn($id) => $this->_db->quoteIdentifier($id);
         return 'SELECT bans.id, bans.ip, bans.uuid, bans.reason, bans.banned_by_uuid, bans.banned_by_name, bans.removed_by_uuid, bans.removed_by_name, bans.removed_by_date, bans.time, bans.until, bans.ipban, bans.active, bans.server_scope, bans.server_origin, history.name, \'ban\' AS type' .
-            ' FROM ' . $this->_extra['bans_table'] . ' AS bans' .
-            ' LEFT JOIN (SELECT name, uuid FROM ' . $this->_extra['history_table'] . ') AS history ON bans.uuid = history.uuid' .
+            ' FROM ' . $qi($this->_extra['bans_table']) . ' AS bans' .
+            ' LEFT JOIN (SELECT ' . $qi('name') . ', ' . $qi('uuid') . ' FROM ' . $qi($this->_extra['history_table']) . ') AS history ON bans.uuid = history.uuid' .
             ' ORDER BY bans.time DESC';
     }
 
     private function getKicksQuery(){
-        return 'SELECT bans.id, bans.ip, bans.uuid, bans.reason, bans.banned_by_uuid, bans.banned_by_name, \'\' AS removed_by_uuid, \'\' AS removed_by_name, \'\' AS removed_by_date, bans.time, \'\' AS until, \'\' AS ipban, \'\' AS active, bans.server_scope, bans.server_origin, history.name, \'kick\' AS type' .
-            ' FROM ' . $this->_extra['kicks_table'] . ' AS bans' .
-            ' LEFT JOIN (SELECT name, uuid FROM ' . $this->_extra['history_table'] . ') AS history ON bans.uuid = history.uuid' .
+        $qi = fn($id) => $this->_db->quoteIdentifier($id);
+        return 'SELECT bans.id, bans.ip, bans.uuid, bans.reason, bans.banned_by_uuid, bans.banned_by_name, \'\' AS removed_by_uuid, \'\' AS removed_by_name, NULL AS removed_by_date, bans.time, NULL AS until, NULL AS ipban, NULL AS active, bans.server_scope, bans.server_origin, history.name, \'kick\' AS type' .
+            ' FROM ' . $qi($this->_extra['kicks_table']) . ' AS bans' .
+            ' LEFT JOIN (SELECT ' . $qi('name') . ', ' . $qi('uuid') . ' FROM ' . $qi($this->_extra['history_table']) . ') AS history ON bans.uuid = history.uuid' .
             ' ORDER BY bans.time DESC';
     }
 
     private function getMutesQuery(){
+        $qi = fn($id) => $this->_db->quoteIdentifier($id);
         return 'SELECT bans.id, bans.ip, bans.uuid, bans.reason, bans.banned_by_uuid, bans.banned_by_name, bans.removed_by_uuid, bans.removed_by_name, bans.removed_by_date, bans.time, bans.until, bans.ipban, bans.active, bans.server_scope, bans.server_origin, history.name, \'mute\' AS type' .
-            ' FROM ' . $this->_extra['mutes_table'] . ' AS bans' .
-            ' LEFT JOIN (SELECT name, uuid FROM ' . $this->_extra['history_table'] . ') AS history ON bans.uuid = history.uuid' .
+            ' FROM ' . $qi($this->_extra['mutes_table']) . ' AS bans' .
+            ' LEFT JOIN (SELECT ' . $qi('name') . ', ' . $qi('uuid') . ' FROM ' . $qi($this->_extra['history_table']) . ') AS history ON bans.uuid = history.uuid' .
             ' ORDER BY bans.time DESC';
     }
 
     private function getWarningsQuery(){
+        $qi = fn($id) => $this->_db->quoteIdentifier($id);
         return 'SELECT bans.id, bans.ip, bans.uuid, bans.reason, bans.banned_by_uuid, bans.banned_by_name, bans.removed_by_uuid, bans.removed_by_name, bans.removed_by_date, bans.time, bans.until, bans.ipban, bans.active, bans.server_scope, bans.server_origin, history.name, \'warning\' AS type' .
-            ' FROM ' . $this->_extra['warnings_table'] . ' AS bans' .
-            ' LEFT JOIN (SELECT name, uuid FROM ' . $this->_extra['history_table'] . ') AS history ON bans.uuid = history.uuid' .
+            ' FROM ' . $qi($this->_extra['warnings_table']) . ' AS bans' .
+            ' LEFT JOIN (SELECT ' . $qi('name') . ', ' . $qi('uuid') . ' FROM ' . $qi($this->_extra['history_table']) . ') AS history ON bans.uuid = history.uuid' .
             ' ORDER BY bans.time DESC';
     }
 

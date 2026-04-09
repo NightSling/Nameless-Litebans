@@ -39,7 +39,7 @@ class MariaDBConnection implements DatabaseConnection {
     }
 
     public function quoteIdentifier(string $identifier): string {
-        return '`' . $identifier . '`';
+        return '`' . str_replace('`', '``', $identifier) . '`';
     }
 
     public function getLimitClause(int $offset, int $limit): array {

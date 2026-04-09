@@ -123,8 +123,11 @@ if (!isset($_GET['view']) && !isset($_GET['id'])) {
 
             $evaluate =
                 isset($result->removed_by_uuid) &&
+                $result->removed_by_uuid !== '' &&
                 isset($result->removed_by_name) &&
-                isset($result->removed_by_date);
+                $result->removed_by_name !== '' &&
+                isset($result->removed_by_date) &&
+                $result->removed_by_date !== null;
 
             $removed_by_uuid = $evaluate ? $result->removed_by_uuid : null;
             $removed_by_name = $evaluate ? $result->removed_by_name : null;
@@ -135,7 +138,7 @@ if (!isset($_GET['view']) && !isset($_GET['id'])) {
 
             switch ($result->type) {
                 case 'ban':
-                    if ($result->until > 0) {
+                    if ($result->until !== null && $result->until > 0) {
                         $type_id = 1; // temp ban
                         $type = $infractions_language->get('infractions', 'temp_ban');
                     } else {
@@ -145,17 +148,17 @@ if (!isset($_GET['view']) && !isset($_GET['id'])) {
                     break;
 
                 case 'ipban':
-                    if ($result->until > 0) {
-                        $type_id = 8; // temp ban
+                    if ($result->until !== null && $result->until > 0) {
+                        $type_id = 8; // temp ip ban
                         $type = $infractions_language->get('infractions', 'temp_ipban');
                     } else {
-                        $type_id = 9; // ban
+                        $type_id = 9; // ip ban
                         $type = $infractions_language->get('infractions', 'ipban');
                     }
                     break;
 
                 case 'mute':
-                    if ($result->until > 0) {
+                    if ($result->until !== null && $result->until > 0) {
                         $type_id = 3; // temp mute
                         $type = $infractions_language->get('infractions', 'temp_mute');
                     } else {
@@ -197,10 +200,10 @@ if (!isset($_GET['view']) && !isset($_GET['id'])) {
                 'issued_full' => date(DATE_FORMAT, $result->time),
                 'action' => $type,
                 'action_id' => $type_id,
-                'expires' => (in_array($type_id, [1, 3, 8]) ? $timeago->inWords($result->until, $language) : null),
-                'expires_full' => (in_array($type_id, [1, 3, 8]) ? date(DATE_FORMAT, $result->until) : null),
-                'revoked' => ((isset($result->active) && $result->active == 1) ? 0 : 1),
-                'revoked_full' => ((!isset($result->active) || $result->active == 0) ? $infractions_language->get('infractions', 'expired') : $infractions_language->get('infractions', 'active')),
+                'expires' => ($result->until !== null && in_array($type_id, [1, 3, 8]) ? $timeago->inWords($result->until, $language) : null),
+                'expires_full' => ($result->until !== null && in_array($type_id, [1, 3, 8]) ? date(DATE_FORMAT, $result->until) : null),
+                'revoked' => (isset($result->active) && $result->active !== null && $result->active != 0 && $result->active !== '') ? 0 : 1,
+                'revoked_full' => ((!isset($result->active) || $result->active === null || $result->active == 0 || $result->active === '') ? $infractions_language->get('infractions', 'expired') : $infractions_language->get('infractions', 'active')),
                 'reason' => Output::getPurified($result->reason),
                 'view_link' => URL::build('/infractions/' . Output::getClean($result->type) . '/' . $result->id),
             ];

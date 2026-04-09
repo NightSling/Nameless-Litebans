@@ -36,16 +36,17 @@ class PostgreSQLConnection implements DatabaseConnection {
             if (is_bool($param)) {
                 $param = $param ? 1 : 0;
             }
-            $this->_statement->bindValue(
-                $x,
-                $param,
-                is_int($param) ? PDO::PARAM_INT : PDO::PARAM_STR
-            );
+            if (is_int($param)) {
+                $this->_statement->bindValue($x, $param, PDO::PARAM_INT);
+            } else {
+                $this->_statement->bindValue($x, $param, PDO::PARAM_STR);
+            }
             $x++;
         }
 
         if ($this->_statement->execute()) {
-            if ($isSelect || str_starts_with(strtoupper(ltrim($sql)), 'SELECT') || str_starts_with(strtoupper(ltrim($sql)), '(SELECT')) {
+            $upperSql = strtoupper(ltrim($sql));
+            if ($isSelect || str_starts_with($upperSql, 'SELECT') || str_starts_with($upperSql, '(SELECT')) {
                 $this->_results = $this->_statement->fetchAll(PDO::FETCH_OBJ);
             }
             $this->_count = $this->_statement->rowCount();
@@ -69,7 +70,7 @@ class PostgreSQLConnection implements DatabaseConnection {
     }
 
     public function quoteIdentifier(string $identifier): string {
-        return '"' . $identifier . '"';
+        return '"' . str_replace('"', '""', $identifier) . '"';
     }
 
     public function getLimitClause(int $offset, int $limit): array {
