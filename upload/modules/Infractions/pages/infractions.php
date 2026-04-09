@@ -1,7 +1,7 @@
 <?php
 /**
- *	Made by Samerton and Partydragen
- *  https://github.com/samerton/Nameless-Infractions
+ *	Made by daysling
+ *  https://github.com/NightSling/Nameless-Litebans
  *  NamelessMC version 2.1.0
  *
  * @license MIT
@@ -62,28 +62,8 @@ if (!isset($inf_db)) {
 /** @var array $inf_config */
 require_once ROOT_PATH . '/modules/Infractions/classes/Infractions.php';
 
-switch ($inf_config['plugin']) {
-	case 'libertybans':
-		// LibertyBans integration
-		require_once ROOT_PATH . '/modules/Infractions/classes/LibertyBans.php';
-		$infractions = new LibertyBans($inf_db, $infractions_language);
-	break;
-
-	case 'litebans':
-		// LiteBans integration
-		require_once ROOT_PATH . '/modules/Infractions/classes/LiteBans.php';
-		$infractions = new LiteBans($inf_db, $infractions_language);
-	break;
-
-	case 'advancedban':
-		// AdvancedBan integration
-		require_once ROOT_PATH . '/modules/Infractions/classes/AdvancedBan.php';
-		$infractions = new AdvancedBan($inf_db, $infractions_language);
-		break;
-
-	default:
-		die('Plugin not supported!');
-}
+require_once ROOT_PATH . '/modules/Infractions/classes/LiteBans.php';
+$infractions = new LiteBans($inf_db, $infractions_language);
 
 if (!isset($_GET['view']) && !isset($_GET['id'])) {
     $infractions_list = $infractions->listInfractions($p, 10);

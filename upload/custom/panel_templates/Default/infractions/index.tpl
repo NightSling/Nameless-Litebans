@@ -33,11 +33,10 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="inputPlugin">{$PLUGIN}</label>
-                                <select class="form-control" id="inputPlugin" name="plugin">
-                                    {foreach from=$PLUGIN_OPTIONS item=item}
-                                        <option value="{$item.value}"{if $PLUGIN_VALUE eq $item.value} selected{/if}>{$item.name}</option>
-                                    {/foreach}
+                                <label for="inputDbType">{$DATABASE_TYPE}</label>
+                                <select class="form-control" id="inputDbType" name="db_type">
+                                    <option value="mariadb"{if $DATABASE_TYPE_VALUE eq 'mariadb'} selected{/if}>MariaDB</option>
+                                    <option value="postgresql"{if $DATABASE_TYPE_VALUE eq 'postgresql'} selected{/if}>PostgreSQL</option>
                                 </select>
                             </div>
                             <div class="form-group custom-control custom-switch">

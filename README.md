@@ -1,18 +1,23 @@
-# Nameless-Infractions
+# Nameless LiteBans-Infractions
+
 The Infractions module for Nameless v2 allows you to display a list of ingame punishments on your website.
 
 ### Supported Plugins
-- AdvancedBan
-- LibertyBans
+
 - LiteBans
 
-If you would like to request plugin support, please open an issue on [GitHub](https://github.com/samerton/Nameless-Infractions/issues).
+### Supported Databases
+
+- MariaDB
+- PostgreSQL (requires `php-pgsql` extension)
 
 ### Requirements
+
 - NamelessMC version 2.2.1+
-- One of the previously mentioned supported plugins installed and configured to use MySQL
+- LiteBans installed and configured to use MySQL or PostgreSQL
 
 ### Installation
+
 - Upload the contents of the **upload** directory straight into your NamelessMC installation's directory
 - Activate the module in the StaffCP -> Modules tab
 - Configure your Infractions plugin information in the StaffCP -> Infractions tab

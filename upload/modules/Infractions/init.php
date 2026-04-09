@@ -1,7 +1,7 @@
 <?php 
 /*
- *	Made by Samerton and Partydragen
- *  https://github.com/samerton/Nameless-Infractions
+ *	Made by daysling
+ *  https://github.com/NightSling/Nameless-Litebans
  *  NamelessMC version 2.0.0-pr13
  *
  *  License: MIT

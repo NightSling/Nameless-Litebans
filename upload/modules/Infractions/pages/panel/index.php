@@ -1,7 +1,7 @@
 <?php 
 /*
- *	Made by Samerton and Partydragen
- *  https://github.com/samerton/Nameless-Infractions
+ *	Made by daysling
+ *  https://github.com/NightSling/Nameless-Litebans
  *  NamelessMC version 2.0.0-pr13
  *
  *  License: MIT
@@ -56,6 +56,8 @@ if(Input::exists()){
 
 		$guests_view = $_POST['guests_view'] == 'on' ? '1' : '0';
 
+		$db_type = ($_POST['db_type'] === 'postgresql') ? 'postgresql' : 'mariadb';
+
         // Update Link location cache
         $cache->setCache('infractions_module_cache');
 		$cache->store('link_location', $location);
@@ -66,7 +68,6 @@ if(Input::exists()){
 		if(file_exists($config_path)){
 			if(is_writable($config_path)){
 				require(ROOT_PATH . '/modules/Infractions/config.php');
-				// Build new email config
 				$config = '<?php' . PHP_EOL .
 					'$inf_db = array(' . PHP_EOL .
 					'    \'address\' => \'' . str_replace('\'', '\\\'', (!empty($_POST['host']) ? $_POST['host'] : $inf_db['address'])) . '\',' . PHP_EOL .
@@ -74,9 +75,9 @@ if(Input::exists()){
 					'    \'name\' => \'' . str_replace('\'', '\\\'', ((!empty($_POST['name'])) ? $_POST['name'] : $inf_db['name'])) . '\',' . PHP_EOL .
 					'    \'username\' => \'' . str_replace('\'', '\\\'', (!empty($_POST['username']) ? $_POST['username'] : $inf_db['username'])) . '\',' . PHP_EOL .
 					'    \'password\' => \'' . str_replace('\'', '\\\'', (!empty($_POST['password']) ? $_POST['password'] : $inf_db['password'])) . '\',' . PHP_EOL .
+					'    \'db_type\' => \'' . str_replace('\'', '\\\'', $db_type) . '\',' . PHP_EOL .
 					');' . PHP_EOL .
 					'$inf_config = array(' . PHP_EOL .
-					'    \'plugin\' => \'' . str_replace('\'', '\\\'', (!empty($_POST['plugin']) ? $_POST['plugin'] : $inf_config['plugin'])) . '\',' . PHP_EOL .
 					'    \'guests_view\' => \'' . str_replace('\'', '\\\'', $guests_view) . '\',' . PHP_EOL .
 					');';
 				$file = fopen($config_path, 'w');
@@ -84,24 +85,21 @@ if(Input::exists()){
 				fclose($file);
 
 			} else {
-				// Permissions incorrect
 				$errors[] = $infractions_language->get('infractions', 'unable_to_write_infractions_config');
 			}
 
 		} else {
-			// Create one now
 			if(is_writable(ROOT_PATH . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'Infractions')){
-				// Build new email config
 				$config = '<?php' . PHP_EOL .
 					'$inf_db = array(' . PHP_EOL .
 					'    \'address\' => \'' . str_replace('\'', '\\\'', (!empty($_POST['host']) ? $_POST['host'] : '')) . '\',' . PHP_EOL .
-					'    \'port\' => \'' . str_replace('\'', '\\\'', (!empty($_POST['port']) ? $_POST['port'] : 3306)) . '\',' . PHP_EOL .
+					'    \'port\' => \'' . str_replace('\'', '\\\'', (!empty($_POST['port']) ? $_POST['port'] : ($db_type === 'postgresql' ? '5432' : '3306'))) . '\',' . PHP_EOL .
 					'    \'name\' => \'' . str_replace('\'', '\\\'', ((!empty($_POST['name'])) ? $_POST['name'] : '')) . '\',' . PHP_EOL .
 					'    \'username\' => \'' . str_replace('\'', '\\\'', (!empty($_POST['username']) ? $_POST['username'] : '')) . '\',' . PHP_EOL .
 					'    \'password\' => \'' . str_replace('\'', '\\\'', (!empty($_POST['password']) ? $_POST['password'] : '')) . '\',' . PHP_EOL .
+					'    \'db_type\' => \'' . str_replace('\'', '\\\'', $db_type) . '\',' . PHP_EOL .
 					');' . PHP_EOL .
 					'$inf_config = array(' . PHP_EOL .
-					'    \'plugin\' => \'' . str_replace('\'', '\\\'', (!empty($_POST['plugin']) ? $_POST['plugin'] : 'litebans')) . '\',' . PHP_EOL .
 					'    \'guests_view\' => \'' . str_replace('\'', '\\\'', $_POST['guests_view']) . '\',' . PHP_EOL .
 					');';
 				$file = fopen($config_path, 'w');
@@ -151,22 +149,6 @@ if(isset($errors) && count($errors))
 		'ERRORS_TITLE' => $language->get('general', 'error')
 	));
 
-// Plugin options
-$plugin_options = array(
-	array(
-		'name' => 'LiteBans',
-		'value' => 'litebans'
-	),
-	array(
-		'name' => 'AdvancedBan',
-		'value' => 'advancedban'
-	),
-	array(
-		'name' => 'LibertyBans',
-		'value' => 'libertybans'
-	)
-);
-
 $smarty->assign(array(
 	'PARENT_PAGE' => PARENT_PAGE,
 	'PAGE' => PANEL_PAGE,
@@ -174,9 +156,10 @@ $smarty->assign(array(
 	'INFO' => $language->get('general', 'info'),
 	'INFRACTIONS' => $infractions_language->get('infractions', 'infractions'),
 	'DATABASE_SETTINGS' => $infractions_language->get('infractions', 'database_settings'),
-	'PLUGIN' => $infractions_language->get('infractions', 'plugin'),
-	'PLUGIN_VALUE' => (!empty($inf_config['plugin']) ? Output::getClean($inf_config['plugin']) : 'litebans'),
-	'PLUGIN_OPTIONS' => $plugin_options,
+	'DATABASE_TYPE' => $infractions_language->get('infractions', 'database_type'),
+	'DATABASE_TYPE_VALUE' => (!empty($inf_db['db_type']) ? Output::getClean($inf_db['db_type']) : 'mariadb'),
+	'DATABASE_TYPE_MARIADB' => 'mariadb',
+	'DATABASE_TYPE_POSTGRESQL' => 'postgresql',
 	'LINK_LOCATION' => $infractions_language->get('infractions', 'link_location'),
 	'LINK_LOCATION_VALUE' => $link_location,
 	'LINK_NAVBAR' => $language->get('admin', 'page_link_navbar'),

@@ -1,7 +1,7 @@
 <?php 
 /*
- *	Made by Samerton and Partydragen
- *  https://github.com/samerton/Nameless-Infractions
+ *	Made by daysling
+ *  https://github.com/NightSling/Nameless-Litebans
  *  NamelessMC version 2.0.0-pr13
  *
  *  License: MIT
@@ -17,7 +17,7 @@ class Infractions_Module extends Module {
 		$this->_infractions_language = $infractions_language;
 
 		$name = 'Infractions';
-		$author = '<a href="https://samerton.me" target="_blank" rel="nofollow noopener">Samerton</a>';
+		$author = '<a href="https://github.com/NightSling" target="_blank" rel="nofollow noopener">daysling</a>';
 		$module_version = '1.4.3';
 		$nameless_version = '2.2.1';
 		

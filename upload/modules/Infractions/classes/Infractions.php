@@ -1,34 +1,34 @@
 <?php
-/*
- *	Made by Samerton
- *  https://github.com/samerton/Nameless-Infractions
- *  NamelessMC version 2.0.0-pr7
- *
- *  License: MIT
- *
- *  Infractions class
- */
 
 abstract class Infractions {
     protected array $_data;
     protected array $_db_details;
     protected Cache $_cache;
-    protected ?DB $_db;
+    protected ?DatabaseConnection $_db = null;
     protected Language $_language;
 
-    // Constructor
     public function __construct(array $inf_db, Language $language){
         $this->_db_details = $inf_db;
         $this->_language = $language;
         $this->_cache = new Cache(array('name' => 'nameless', 'extension' => '.cache', 'path' => ROOT_PATH . '/cache/infractions/'));
     }
 
-    // Connect to database
     protected function initDB() {
-        $this->_db = DB::getCustomInstance($this->_db_details['address'], $this->_db_details['name'], $this->_db_details['username'], $this->_db_details['password'], $this->_db_details['port'], null, '');
+        require_once ROOT_PATH . '/modules/Infractions/classes/Database/DatabaseConnection.php';
+
+        $db_type = $this->_db_details['db_type'] ?? 'mariadb';
+
+        if ($db_type === 'postgresql') {
+            require_once ROOT_PATH . '/modules/Infractions/classes/Database/PostgreSQLConnection.php';
+            $this->_db = new PostgreSQLConnection($this->_db_details);
+        } else {
+            require_once ROOT_PATH . '/modules/Infractions/classes/Database/MariaDBConnection.php';
+            $this->_db = new MariaDBConnection($this->_db_details);
+        }
+
+        $this->_db->connect();
     }
 
-    // Order array of objects using created attribute
     protected function date_compare($a, $b): int {
         if (!isset($a->created) || !isset($b->created)) {
             $a->created = $this->getCreationTime($a);
@@ -39,18 +39,6 @@ abstract class Infractions {
         return ($a->created < $b->created) ? 1 : -1;
     }
 
-    /**
-     * Retrieve a list of all infractions, either from cache or database
-     * @param int $page
-     * @param int $limit
-     * @return array
-     */
     abstract public function listInfractions(int $page, int $limit): array;
-
-    /**
-     * Retrieve total number of infractions
-     * @return int
-     */
     abstract protected function getTotal(): int;
-
 }
